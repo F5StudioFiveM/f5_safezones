@@ -103,8 +103,7 @@ Config.Safezones = {
         disableVehicleWeapons = true, -- Disable vehicle-mounted weapons
         collisionDisabled = false, -- Set to true to completely disable collision system for this zone
         -- Render distance configuration
-        renderDistance = 50.0, -- Distance from zone center to render the marker
-        infiniteRenderDistance = false -- If true, render distance is set to 600 units
+        renderDistance = 50.0 -- Distance from zone center to render the marker
     } 
 }
 
