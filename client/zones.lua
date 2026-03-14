@@ -1032,7 +1032,7 @@ local function DrawEnhancedCircleMarker(zone, markerData, currentTime)
 
     local markerZ = coords.z
     if markerConfig.autoLevel then
-        markerZ = GetLowestZonePoint(zone) + 0.1
+        markerZ = GetLowestZonePoint(zone) - 0.5
     end
 
     markerZ = markerZ + effects.zOffset
@@ -1178,8 +1178,8 @@ local function DrawEnhancedPolygon(zone, markerData, currentTime)
 
     if markerConfig.autoLevel then
         local lowestZ = GetLowestZonePoint(zone)
-        baseMinZ = lowestZ + effects.zOffset
-        baseMaxZ = lowestZ + wallHeight + effects.zOffset
+        baseMinZ = lowestZ - 0.5 + effects.zOffset
+        baseMaxZ = lowestZ - 0.5 + wallHeight + effects.zOffset
 
         for i, point in ipairs(rotatedPoints) do
             adjustedPoints[i] = {

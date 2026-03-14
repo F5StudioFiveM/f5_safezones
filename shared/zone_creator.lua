@@ -192,25 +192,37 @@ if not _is_server then
     end
 
     local function draw_crosshair(x, y, z, size, r, g, b, a)
-        local s = size or 0.3
+        local s = size or 0.4
         local h = z + 0.15
         DrawLine(x - s, y, h, x + s, y, h, r, g, b, a)
+        DrawLine(x - s, y, h, x + s, y, h, r, g, b, a)
         DrawLine(x, y - s, h, x, y + s, h, r, g, b, a)
+        DrawLine(x, y - s, h, x, y + s, h, r, g, b, a)
+        DrawLine(x, y, h, x, y, h + s, r, g, b, a)
         DrawLine(x, y, h, x, y, h + s, r, g, b, a)
     end
 
     local function draw_text_3d(x, y, z, text)
-        SetDrawOrigin(x, y, z, 0)
+        local onScreen, sx, sy = World3dToScreen2d(x, y, z)
+        if not onScreen then return end
         SetTextFont(4)
-        SetTextScale(0.35, 0.35)
+        SetTextScale(0.4, 0.4)
         SetTextProportional(1)
-        SetTextColour(255, 255, 255, 215)
+        SetTextColour(255, 255, 255, 255)
         SetTextOutline()
+        SetTextDropShadow()
         SetTextCentre(1)
-        SetTextEntry("STRING")
-        AddTextComponentString(text)
-        DrawText(0.0, 0.0)
-        ClearDrawOrigin()
+        BeginTextCommandDisplayText("STRING")
+        AddTextComponentSubstringPlayerName(text)
+        EndTextCommandDisplayText(sx, sy)
+    end
+
+    local function draw_border_line(ax, ay, az, bx, by, bz, r, g, b)
+        local h = 0.15
+        DrawLine(ax, ay, az + h, bx, by, bz + h, 0, 0, 0, 200)
+        DrawLine(ax, ay, az + h + 0.03, bx, by, bz + h + 0.03, r, g, b, 255)
+        DrawLine(ax, ay, az + h - 0.03, bx, by, bz + h - 0.03, r, g, b, 255)
+        DrawLine(ax, ay, az + h, bx, by, bz + h, 255, 255, 255, 80)
     end
 
     local function draw_zone(points, r, g, b)
@@ -218,13 +230,24 @@ if not _is_server then
         for i = 1, #points do
             local a = points[i]
             local bpt = points[i + 1] or points[1]
-            if i == selected_point then
-                DrawLine(a.x, a.y, a.z + 0.2, bpt.x, bpt.y, bpt.z + 0.2, 0, 255, 0, 255)
-                draw_crosshair(a.x, a.y, a.z, 0.5, 0, 255, 0, 255)
-                draw_text_3d(a.x, a.y, a.z + 0.5, '~g~[' .. tostring(i) .. ']~s~')
+            local is_sel = i == selected_point
+
+            if is_sel then
+                draw_border_line(a.x, a.y, a.z, bpt.x, bpt.y, bpt.z, 0, 255, 0)
             else
-                DrawLine(a.x, a.y, a.z + 0.2, bpt.x, bpt.y, bpt.z + 0.2, r, g, b, 255)
-                draw_text_3d(a.x, a.y, a.z + 0.25, tostring(i))
+                draw_border_line(a.x, a.y, a.z, bpt.x, bpt.y, bpt.z, r, g, b)
+            end
+
+            if is_sel then
+                DrawMarker(2, a.x, a.y, a.z + 0.05, 0, 0, 0, 180.0, 0, 0, 0.25, 0.25, 0.4, 0, 255, 0, 220, false, true, 2, false, nil, nil, false)
+            else
+                DrawMarker(2, a.x, a.y, a.z + 0.05, 0, 0, 0, 180.0, 0, 0, 0.18, 0.18, 0.3, 255, 60, 0, 220, false, true, 2, false, nil, nil, false)
+            end
+
+            if is_sel then
+                draw_text_3d(a.x, a.y, a.z + 0.6, '~g~[' .. tostring(i) .. ']~s~')
+            else
+                draw_text_3d(a.x, a.y, a.z + 0.6, tostring(i))
             end
         end
     end
@@ -364,9 +387,9 @@ if not _is_server then
                 local aim = get_aim_coord()
                 if aim then
                     if selected_point then
-                        draw_crosshair(aim.x, aim.y, aim.z, 0.3, 0, 255, 0, 200)
+                        draw_crosshair(aim.x, aim.y, aim.z, 0.4, 0, 255, 0, 220)
                     else
-                        draw_crosshair(aim.x, aim.y, aim.z, 0.3, 0, 200, 0, 200)
+                        draw_crosshair(aim.x, aim.y, aim.z, 0.4, 0, 220, 0, 220)
                     end
                 end
             end
