@@ -4795,7 +4795,7 @@ function drawCircleZone(ctx, zone) {
 
     if (SZ.mapState.zoom > 0.8) {
         const labelText = zone.id !== undefined ? `#${zone.id} ${zone.name}` : zone.name;
-        drawZoneLabel(ctx, labelText, x, y, hasPlayers);
+        drawZoneLabel(ctx, labelText, x, y, hasPlayers, zone.name);
     }
 }
 
@@ -4872,7 +4872,7 @@ function drawPolygonZone(ctx, zone) {
         const center = getPolygonCenter(mapPoints);
 
         const labelText = zone.id !== undefined ? `#${zone.id} ${zone.name}` : zone.name;
-        drawZoneLabel(ctx, labelText, center.x, center.y, hasPlayers);
+        drawZoneLabel(ctx, labelText, center.x, center.y, hasPlayers, zone.name);
 
         if (SZ.mapState.showGrid) {
             ctx.font = `${10 / SZ.mapState.zoom}px Inter`;
@@ -4882,7 +4882,7 @@ function drawPolygonZone(ctx, zone) {
     }
 }
 
-function drawZoneLabel(ctx, name, x, y, hasPlayers) {
+function drawZoneLabel(ctx, name, x, y, hasPlayers, zoneName) {
     ctx.font = `${14 / SZ.mapState.zoom}px Inter`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -4895,7 +4895,7 @@ function drawZoneLabel(ctx, name, x, y, hasPlayers) {
     ctx.fillText(name, x, y);
 
     if (hasPlayers) {
-        const playerCount = SZ.state.players.filter(p => p.zoneName === name).length;
+        const playerCount = SZ.state.players.filter(p => p.zoneName === zoneName).length;
         ctx.font = `${12 / SZ.mapState.zoom}px Inter`;
 
         ctx.strokeStyle = '#000000';
