@@ -109,4 +109,8 @@ Locales_fr = {
     creator_notif_center_reset = "Point central réinitialisé",
     creator_notif_radius_set = "Rayon défini à %.1f m",
     creator_notif_need_center = "D'abord définir le centre (F)",
+    creator_notif_undo = "Action annulée",
+    creator_notif_undo_empty = "Rien à annuler",
+    creator_notif_redo = "Action rétablie",
+    creator_notif_redo_empty = "Rien à rétablir",
 }

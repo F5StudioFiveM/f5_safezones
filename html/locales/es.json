@@ -434,7 +434,9 @@
       "next_point": "Siguiente Punto",
       "move_point": "Mover Punto",
       "delete_point": "Eliminar Punto",
-      "deselect": "Deseleccionar"
+      "deselect": "Deseleccionar",
+      "undo": "Deshacer",
+      "redo": "Rehacer"
     },
     "panel": {
       "coordinates_header": "COORDENADAS",

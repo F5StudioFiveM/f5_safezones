@@ -434,7 +434,9 @@
       "next_point": "จุดถัดไป",
       "move_point": "ย้ายจุด",
       "delete_point": "ลบจุด",
-      "deselect": "ยกเลิกเลือก"
+      "deselect": "ยกเลิกเลือก",
+      "undo": "เลิกทำ",
+      "redo": "ทำซ้ำ"
     },
     "panel": {
       "coordinates_header": "พิกัด",

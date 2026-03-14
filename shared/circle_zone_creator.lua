@@ -30,7 +30,9 @@ if not _is_server then
         ["mouse1"] = 24,
         ["mouse2"] = 25,
         ["scrollup"] = 96,
-        ["scrolldown"] = 97
+        ["scrolldown"] = 97,
+        ["z"] = 20,
+        ["y"] = 246
     }
 
     local _flying_speeds = { base = 0.25, fast_multiplier = 3.0, slow_multiplier = 0.25 }
@@ -48,6 +50,9 @@ if not _is_server then
     local debug_preview = false
     local zone_settings = nil
     local return_pos = nil
+    local undo_stack = {}
+    local redo_stack = {}
+    local MAX_UNDO = 50
 
     local last_notif = 0
     local function notify(msg, ntype)
@@ -55,6 +60,41 @@ if not _is_server then
         if now - last_notif < 300 then return end
         last_notif = now
         SendNUIMessage({ action = 'creatorNotify', message = msg, type = ntype or 'info' })
+    end
+
+    local function clone_circle()
+        return {
+            center = center_point and vector3(center_point.x, center_point.y, center_point.z) or nil,
+            radius = current_radius
+        }
+    end
+
+    local function snapshot_circle()
+        undo_stack[#undo_stack + 1] = clone_circle()
+        if #undo_stack > MAX_UNDO then
+            table.remove(undo_stack, 1)
+        end
+        redo_stack = {}
+    end
+
+    local function undo_last()
+        if #undo_stack == 0 then return false end
+        redo_stack[#redo_stack + 1] = clone_circle()
+        local state = undo_stack[#undo_stack]
+        undo_stack[#undo_stack] = nil
+        center_point = state.center
+        current_radius = state.radius
+        return true
+    end
+
+    local function redo_last()
+        if #redo_stack == 0 then return false end
+        undo_stack[#undo_stack + 1] = clone_circle()
+        local state = redo_stack[#redo_stack]
+        redo_stack[#redo_stack] = nil
+        center_point = state.center
+        current_radius = state.radius
+        return true
     end
 
     local center_marker_color = { r = 0, g = 255, b = 0, a = 200 }
@@ -85,24 +125,9 @@ if not _is_server then
         local ped = PlayerPedId()
         local cam_rot = GetGameplayCamRot(2)
 
-        SetEntityHeading(ped, cam_rot.z)
-
-        DisableControlAction(0, get_key("w"))
-        DisableControlAction(0, get_key("a"))
-        DisableControlAction(0, get_key("s"))
-        DisableControlAction(0, get_key("d"))
-        DisableControlAction(0, get_key("q"))
-        DisableControlAction(0, get_key("e"))
-        DisableControlAction(0, get_key("leftshift"))
-        DisableControlAction(0, get_key("leftcontrol"))
-        DisableControlAction(0, get_key("g"))
-        DisableControlAction(0, get_key("f"))
-        DisableControlAction(0, get_key("x"))
-        DisableControlAction(0, get_key("r"))
-        DisableControlAction(0, get_key("enter"))
-        DisableControlAction(0, get_key("backspace"))
-        DisableControlAction(0, get_key("scrollup"))
-        DisableControlAction(0, get_key("scrolldown"))
+        DisableAllControlActions(0)
+        EnableControlAction(0, 1, true)
+        EnableControlAction(0, 2, true)
 
         local move_dir = vector3(0, 0, 0)
         local forward = rot_to_dir(cam_rot)
@@ -228,6 +253,8 @@ if not _is_server then
         debug_preview = false
         zone_settings = nil
         return_pos = nil
+        undo_stack = {}
+        redo_stack = {}
 
         SendNUIMessage({ action = 'hideCreatorOverlay' })
 
@@ -350,9 +377,26 @@ if not _is_server then
             while is_active do
                 Wait(0)
 
-                if IsDisabledControlJustPressed(0, get_key("f")) and not center_point then
+                if IsDisabledControlJustPressed(0, get_key("z")) then
+                    if undo_last() then
+                        send_circle_nui_update()
+                        notify(Translate('creator_notif_undo'), 'info')
+                    else
+                        notify(Translate('creator_notif_undo_empty'), 'error')
+                    end
+
+                elseif IsDisabledControlJustPressed(0, get_key("y")) then
+                    if redo_last() then
+                        send_circle_nui_update()
+                        notify(Translate('creator_notif_redo'), 'info')
+                    else
+                        notify(Translate('creator_notif_redo_empty'), 'error')
+                    end
+
+                elseif IsDisabledControlJustPressed(0, get_key("f")) and not center_point then
                     local hit = get_aim_coord()
                     if hit then
+                        snapshot_circle()
                         center_point = hit
                         send_circle_nui_update()
                         notify(Translate('creator_notif_center_set'), 'success')
@@ -361,6 +405,7 @@ if not _is_server then
                     end
 
                 elseif IsDisabledControlJustPressed(0, get_key("x")) and center_point then
+                    snapshot_circle()
                     center_point = nil
                     send_circle_nui_update()
                     notify(Translate('creator_notif_center_reset'))
@@ -372,6 +417,7 @@ if not _is_server then
                 elseif IsDisabledControlJustPressed(0, get_key("r")) and center_point then
                     local hit = get_aim_coord()
                     if hit then
+                        snapshot_circle()
                         local dist = #(vector2(hit.x, hit.y) - vector2(center_point.x, center_point.y))
                         dist = math.max(min_radius, math.min(max_radius, dist))
                         current_radius = dist
@@ -381,6 +427,7 @@ if not _is_server then
 
                 elseif center_point then
                     if IsDisabledControlJustPressed(0, get_key("scrollup")) then
+                        snapshot_circle()
                         local step = radius_step
                         if IsDisabledControlPressed(0, get_key("leftshift")) then
                             step = step * 5
@@ -392,6 +439,7 @@ if not _is_server then
                     end
 
                     if IsDisabledControlJustPressed(0, get_key("scrolldown")) then
+                        snapshot_circle()
                         local step = radius_step
                         if IsDisabledControlPressed(0, get_key("leftshift")) then
                             step = step * 5

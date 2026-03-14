@@ -434,7 +434,9 @@
       "next_point": "下一个点",
       "move_point": "移动点",
       "delete_point": "删除点",
-      "deselect": "取消选择"
+      "deselect": "取消选择",
+      "undo": "撤销",
+      "redo": "重做"
     },
     "panel": {
       "coordinates_header": "坐标",

@@ -434,7 +434,9 @@
       "next_point": "Volgend Punt",
       "move_point": "Punt Verplaatsen",
       "delete_point": "Punt Verwijderen",
-      "deselect": "Deselecteren"
+      "deselect": "Deselecteren",
+      "undo": "Ongedaan maken",
+      "redo": "Opnieuw"
     },
     "panel": {
       "coordinates_header": "COÖRDINATEN",

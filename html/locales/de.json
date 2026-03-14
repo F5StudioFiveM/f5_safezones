@@ -434,7 +434,9 @@
       "next_point": "Nächster Punkt",
       "move_point": "Punkt Verschieben",
       "delete_point": "Punkt Löschen",
-      "deselect": "Abwählen"
+      "deselect": "Abwählen",
+      "undo": "Rückgängig",
+      "redo": "Wiederherstellen"
     },
     "panel": {
       "coordinates_header": "KOORDINATEN",

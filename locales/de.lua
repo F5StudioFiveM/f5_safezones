@@ -109,4 +109,8 @@ Locales_de = {
     creator_notif_center_reset = "Mittelpunkt zurückgesetzt",
     creator_notif_radius_set = "Radius auf %.1f m gesetzt",
     creator_notif_need_center = "Zuerst Mittelpunkt setzen (F)",
+    creator_notif_undo = "Aktion rückgängig gemacht",
+    creator_notif_undo_empty = "Nichts zum Rückgängig machen",
+    creator_notif_redo = "Aktion wiederhergestellt",
+    creator_notif_redo_empty = "Nichts zum Wiederherstellen",
 }

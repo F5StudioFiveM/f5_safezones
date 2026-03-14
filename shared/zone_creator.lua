@@ -89,6 +89,9 @@ if not _is_server then
     local zone_settings = nil
     local cached_serialized = nil
     local selected_point = nil
+    local undo_stack = {}
+    local redo_stack = {}
+    local MAX_UNDO = 50
 
     local last_notif = 0
     local function notify(msg, ntype)
@@ -98,6 +101,42 @@ if not _is_server then
         SendNUIMessage({ action = 'creatorNotify', message = msg, type = ntype or 'info' })
     end
     local return_pos = nil
+
+    local function clone_zone()
+        local snap = {}
+        for i, pt in ipairs(current_zone) do
+            snap[i] = vector3(pt.x, pt.y, pt.z)
+        end
+        return { points = snap, sel = selected_point }
+    end
+
+    local function snapshot_zone()
+        undo_stack[#undo_stack + 1] = clone_zone()
+        if #undo_stack > MAX_UNDO then
+            table.remove(undo_stack, 1)
+        end
+        redo_stack = {}
+    end
+
+    local function undo_last()
+        if #undo_stack == 0 then return false end
+        redo_stack[#redo_stack + 1] = clone_zone()
+        local state = undo_stack[#undo_stack]
+        undo_stack[#undo_stack] = nil
+        current_zone = state.points
+        selected_point = state.sel
+        return true
+    end
+
+    local function redo_last()
+        if #redo_stack == 0 then return false end
+        undo_stack[#undo_stack + 1] = clone_zone()
+        local state = redo_stack[#redo_stack]
+        redo_stack[#redo_stack] = nil
+        current_zone = state.points
+        selected_point = state.sel
+        return true
+    end
 
     local function get_key(k)
         return _keys[k] or 0
@@ -123,24 +162,9 @@ if not _is_server then
         local ped = PlayerPedId()
         local cam_rot = GetGameplayCamRot(2)
 
-        SetEntityHeading(ped, cam_rot.z)
-
-        DisableControlAction(0, get_key("w"))
-        DisableControlAction(0, get_key("a"))
-        DisableControlAction(0, get_key("s"))
-        DisableControlAction(0, get_key("d"))
-        DisableControlAction(0, get_key("q"))
-        DisableControlAction(0, get_key("e"))
-        DisableControlAction(0, get_key("leftshift"))
-        DisableControlAction(0, get_key("leftcontrol"))
-        DisableControlAction(0, get_key("g"))
-        DisableControlAction(0, get_key("tab"))
-        DisableControlAction(0, get_key("delete"))
-        DisableControlAction(0, get_key("f"))
-        DisableControlAction(0, get_key("x"))
-        DisableControlAction(0, get_key("enter"))
-        DisableControlAction(0, get_key("backspace"))
-        DisableControlAction(0, get_key("space"))
+        DisableAllControlActions(0)
+        EnableControlAction(0, 1, true)
+        EnableControlAction(0, 2, true)
 
         local move_dir = vector3(0, 0, 0)
         local forward = rot_to_dir(cam_rot)
@@ -256,6 +280,8 @@ if not _is_server then
         current_zone = {}
         selected_point = nil
         return_pos = nil
+        undo_stack = {}
+        redo_stack = {}
 
         SendNUIMessage({ action = 'hideCreatorOverlay' })
 
@@ -350,7 +376,23 @@ if not _is_server then
             while is_active do
                 Wait(0)
 
-                if IsDisabledControlJustPressed(0, get_key("space")) then
+                if IsDisabledControlJustPressed(0, get_key("z")) then
+                    if undo_last() then
+                        send_polygon_nui_update()
+                        notify(Translate('creator_notif_undo'), 'info')
+                    else
+                        notify(Translate('creator_notif_undo_empty'), 'error')
+                    end
+
+                elseif IsDisabledControlJustPressed(0, get_key("y")) then
+                    if redo_last() then
+                        send_polygon_nui_update()
+                        notify(Translate('creator_notif_redo'), 'info')
+                    else
+                        notify(Translate('creator_notif_redo_empty'), 'error')
+                    end
+
+                elseif IsDisabledControlJustPressed(0, get_key("space")) then
                     if selected_point then
                         selected_point = nil
                         send_polygon_nui_update()
@@ -373,6 +415,7 @@ if not _is_server then
                 elseif IsDisabledControlJustPressed(0, get_key("f")) then
                     local hit = get_aim_coord()
                     if hit then
+                        snapshot_zone()
                         if selected_point and selected_point <= #current_zone then
                             current_zone[selected_point] = hit
                             notify(Translate('creator_notif_point_moved'):format(selected_point), 'success')
@@ -388,6 +431,7 @@ if not _is_server then
 
                 elseif IsDisabledControlJustPressed(0, get_key("x")) then
                     if #current_zone > 0 then
+                        snapshot_zone()
                         current_zone[#current_zone] = nil
                         if selected_point and selected_point > #current_zone then
                             selected_point = nil
@@ -399,6 +443,7 @@ if not _is_server then
                 elseif IsDisabledControlJustPressed(0, get_key("delete")) then
                     if selected_point and selected_point <= #current_zone then
                         if #current_zone > 3 then
+                            snapshot_zone()
                             local deleted = selected_point
                             table.remove(current_zone, selected_point)
                             if selected_point > #current_zone then
@@ -441,6 +486,8 @@ if not _is_server then
                             current_zone = {}
                             zone_index = zone_index + 1
                             selected_point = nil
+                            undo_stack = {}
+                            redo_stack = {}
                             send_polygon_nui_update()
                         end
                     else

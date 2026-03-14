@@ -5959,61 +5959,75 @@ function renderCreatorControls(type, phase) {
     const bar = document.getElementById('creatorControlsBar');
     if (!bar) return;
 
-    let controls = [];
-    const base = [
-        { label: SZ.Localization.t('creator.controls.movement'), key: 'W A S D' },
-        { label: SZ.Localization.t('creator.controls.up_down'), key: 'Q E' },
-        { label: SZ.Localization.t('creator.controls.slow'), key: 'CTRL' },
-        { label: SZ.Localization.t('creator.controls.speed'), key: 'SHIFT' }
+    const t = (k) => SZ.Localization.t('creator.controls.' + k);
+    const groups = [];
+
+    const movement = [
+        { label: t('movement'), key: 'W A S D' },
+        { label: t('up_down'), key: 'Q E' },
+        { label: t('slow'), key: 'CTRL' },
+        { label: t('speed'), key: 'SHIFT' }
+    ];
+
+    const history = [
+        { label: t('undo'), key: 'Z' },
+        { label: t('redo'), key: 'Y' }
+    ];
+
+    const session = [
+        { label: t('debug'), key: 'G' }
     ];
 
     if (type === 'polygon') {
+        let editing, selection;
         if (_creatorState.selectedPoint) {
-            controls = [
-                ...base,
-                { label: SZ.Localization.t('creator.controls.move_point'), key: 'F' },
-                { label: SZ.Localization.t('creator.controls.remove_coordinate'), key: 'X', danger: true },
-                { label: SZ.Localization.t('creator.controls.next_point'), key: 'TAB' },
-                { label: SZ.Localization.t('creator.controls.deselect'), key: 'SPACE' },
-                { label: SZ.Localization.t('creator.controls.delete_point'), key: 'DEL', danger: true },
-                { label: SZ.Localization.t('creator.controls.debug'), key: 'G' },
-                { label: SZ.Localization.t('creator.controls.complete'), key: 'ENTER' },
-                { label: SZ.Localization.t('creator.controls.exit'), key: 'BACKSPACE', danger: true }
+            editing = [
+                { label: t('move_point'), key: 'F' },
+                { label: t('remove_coordinate'), key: 'X', danger: true },
+                { label: t('delete_point'), key: 'DEL', danger: true }
+            ];
+            selection = [
+                { label: t('next_point'), key: 'TAB' },
+                { label: t('deselect'), key: 'SPACE' }
             ];
         } else {
-            controls = [
-                ...base,
-                { label: SZ.Localization.t('creator.controls.add_coordinate'), key: 'F' },
-                { label: SZ.Localization.t('creator.controls.remove_coordinate'), key: 'X', danger: true },
-                { label: SZ.Localization.t('creator.controls.select_point'), key: 'TAB' },
-                { label: SZ.Localization.t('creator.controls.debug'), key: 'G' },
-                { label: SZ.Localization.t('creator.controls.complete'), key: 'ENTER' },
-                { label: SZ.Localization.t('creator.controls.exit'), key: 'BACKSPACE', danger: true }
+            editing = [
+                { label: t('add_coordinate'), key: 'F' },
+                { label: t('remove_coordinate'), key: 'X', danger: true }
+            ];
+            selection = [
+                { label: t('select_point'), key: 'TAB' }
             ];
         }
+        groups.push(movement, editing, selection, history, [
+            ...session,
+            { label: t('complete'), key: 'ENTER' },
+            { label: t('exit'), key: 'BACKSPACE', danger: true }
+        ]);
     } else if (type === 'circle') {
+        let editing;
         if (phase === 1) {
-            controls = [
-                ...base,
-                { label: SZ.Localization.t('creator.controls.set_center'), key: 'F' },
-                { label: SZ.Localization.t('creator.controls.debug'), key: 'G' },
-                { label: SZ.Localization.t('creator.controls.exit'), key: 'BACKSPACE', danger: true }
+            editing = [
+                { label: t('set_center'), key: 'F' }
             ];
         } else {
-            controls = [
-                ...base,
-                { label: SZ.Localization.t('creator.controls.adjust_radius'), key: 'SCROLL' },
-                { label: SZ.Localization.t('creator.controls.radius_to_cursor'), key: 'R' },
-                { label: SZ.Localization.t('creator.controls.reset_center'), key: 'X', danger: true },
-                { label: SZ.Localization.t('creator.controls.debug'), key: 'G' },
-                { label: SZ.Localization.t('creator.controls.confirm'), key: 'ENTER' },
-                { label: SZ.Localization.t('creator.controls.exit'), key: 'BACKSPACE', danger: true }
+            editing = [
+                { label: t('adjust_radius'), key: 'SCROLL' },
+                { label: t('radius_to_cursor'), key: 'R' },
+                { label: t('reset_center'), key: 'X', danger: true }
             ];
         }
+        groups.push(movement, editing, history, [
+            ...session,
+            { label: phase === 1 ? t('exit') : t('confirm'), key: phase === 1 ? 'BACKSPACE' : 'ENTER', danger: phase === 1 },
+            ...(phase !== 1 ? [{ label: t('exit'), key: 'BACKSPACE', danger: true }] : [])
+        ]);
     }
 
-    bar.innerHTML = controls.map(c =>
-        `<div class="creator-control-item"><span class="creator-control-label">${c.label}</span><span class="creator-control-key${c.danger ? ' key-danger' : ''}">${c.key}</span></div>`
+    bar.innerHTML = groups.map(group =>
+        `<div class="creator-control-group">${group.map(c =>
+            `<div class="creator-control-item"><span class="creator-control-label">${c.label}</span><span class="creator-control-key${c.danger ? ' key-danger' : ''}">${c.key}</span></div>`
+        ).join('')}</div>`
     ).join('');
 }
 

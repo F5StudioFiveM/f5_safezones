@@ -109,4 +109,8 @@ Locales_pl = {
     creator_notif_center_reset = "Zresetowano punkt środkowy",
     creator_notif_radius_set = "Promień ustawiony na %.1f m",
     creator_notif_need_center = "Najpierw ustaw środek (F)",
+    creator_notif_undo = "Cofnięto akcję",
+    creator_notif_undo_empty = "Brak akcji do cofnięcia",
+    creator_notif_redo = "Przywrócono akcję",
+    creator_notif_redo_empty = "Brak akcji do przywrócenia",
 }

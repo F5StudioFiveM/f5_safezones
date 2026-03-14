@@ -434,7 +434,9 @@
       "next_point": "النقطة التالية",
       "move_point": "نقل النقطة",
       "delete_point": "حذف النقطة",
-      "deselect": "إلغاء التحديد"
+      "deselect": "إلغاء التحديد",
+      "undo": "تراجع",
+      "redo": "إعادة"
     },
     "panel": {
       "coordinates_header": "الإحداثيات",

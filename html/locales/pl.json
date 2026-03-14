@@ -434,7 +434,9 @@
       "next_point": "Następny Punkt",
       "move_point": "Przesuń Punkt",
       "delete_point": "Usuń Punkt",
-      "deselect": "Odznacz"
+      "deselect": "Odznacz",
+      "undo": "Cofnij",
+      "redo": "Przywróć"
     },
     "panel": {
       "coordinates_header": "WSPÓŁRZĘDNE",

@@ -109,4 +109,8 @@ Locales_es = {
     creator_notif_center_reset = "Punto central restablecido",
     creator_notif_radius_set = "Radio establecido en %.1f m",
     creator_notif_need_center = "Primero establece el centro (F)",
+    creator_notif_undo = "Acción deshecha",
+    creator_notif_undo_empty = "Nada que deshacer",
+    creator_notif_redo = "Acción rehecha",
+    creator_notif_redo_empty = "Nada que rehacer",
 }

@@ -434,7 +434,9 @@
       "next_point": "Sonraki Nokta",
       "move_point": "Noktayı Taşı",
       "delete_point": "Noktayı Sil",
-      "deselect": "Seçimi Kaldır"
+      "deselect": "Seçimi Kaldır",
+      "undo": "Geri Al",
+      "redo": "Yinele"
     },
     "panel": {
       "coordinates_header": "KOORDİNATLAR",

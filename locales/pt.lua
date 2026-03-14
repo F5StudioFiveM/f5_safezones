@@ -109,4 +109,8 @@ Locales_pt = {
     creator_notif_center_reset = "Center point reset",
     creator_notif_radius_set = "Radius set to %.1f m",
     creator_notif_need_center = "Set center point first (F)",
+    creator_notif_undo = "Action undone",
+    creator_notif_undo_empty = "Nothing to undo",
+    creator_notif_redo = "Action redone",
+    creator_notif_redo_empty = "Nothing to redo",
 }

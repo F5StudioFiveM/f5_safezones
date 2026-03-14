@@ -6004,11 +6004,23 @@ button:disabled {
     transform: translateX(-50%);
     display: flex;
     align-items: center;
-    gap: 4px;
-    padding: 10px 18px;
-    background: rgba(13, 13, 13, 0.9);
-    border: 1px solid rgba(255, 255, 255, 0.07);
+    gap: 0;
+    padding: 8px 12px;
+    background: rgba(13, 13, 13, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: var(--radius-lg);
+    overflow: hidden;
+}
+
+.creator-control-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 10px;
+}
+
+.creator-control-group + .creator-control-group {
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .creator-control-item {
@@ -6016,10 +6028,6 @@ button:disabled {
     align-items: center;
     gap: 5px;
     white-space: nowrap;
-}
-
-.creator-control-item + .creator-control-item {
-    margin-left: 8px;
 }
 
 .creator-control-label {
