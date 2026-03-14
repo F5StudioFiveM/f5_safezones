@@ -5968,9 +5968,10 @@ function renderCreatorControls(type, phase) {
             controls = [
                 ...base,
                 { label: SZ.Localization.t('creator.controls.move_point'), key: 'F' },
+                { label: SZ.Localization.t('creator.controls.remove_coordinate'), key: 'X', danger: true },
                 { label: SZ.Localization.t('creator.controls.next_point'), key: 'TAB' },
+                { label: SZ.Localization.t('creator.controls.deselect'), key: 'SPACE' },
                 { label: SZ.Localization.t('creator.controls.delete_point'), key: 'DEL', danger: true },
-                { label: SZ.Localization.t('creator.controls.deselect'), key: 'X' },
                 { label: SZ.Localization.t('creator.controls.debug'), key: 'G' },
                 { label: SZ.Localization.t('creator.controls.complete'), key: 'ENTER' },
                 { label: SZ.Localization.t('creator.controls.exit'), key: 'BACKSPACE', danger: true }

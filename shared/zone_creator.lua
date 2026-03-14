@@ -132,6 +132,7 @@ if not _is_server then
         DisableControlAction(0, get_key("x"))
         DisableControlAction(0, get_key("enter"))
         DisableControlAction(0, get_key("backspace"))
+        DisableControlAction(0, get_key("space"))
 
         local move_dir = vector3(0, 0, 0)
         local forward = rot_to_dir(cam_rot)
@@ -214,7 +215,7 @@ if not _is_server then
             action = 'updateCreatorOverlay',
             type = 'polygon',
             coordinates = cached_serialized,
-            selectedPoint = selected_point
+            selectedPoint = selected_point or false
         })
     end
 
@@ -341,7 +342,13 @@ if not _is_server then
             while is_active do
                 Wait(0)
 
-                if IsDisabledControlJustPressed(0, get_key("tab")) then
+                if IsDisabledControlJustPressed(0, get_key("space")) then
+                    if selected_point then
+                        selected_point = nil
+                        send_polygon_nui_update()
+                    end
+
+                elseif IsDisabledControlJustPressed(0, get_key("tab")) then
                     if #current_zone > 0 then
                         if selected_point == nil then
                             selected_point = 1
@@ -364,11 +371,11 @@ if not _is_server then
                     end
 
                 elseif IsDisabledControlJustPressed(0, get_key("x")) then
-                    if selected_point then
-                        selected_point = nil
-                        send_polygon_nui_update()
-                    elseif #current_zone > 0 then
+                    if #current_zone > 0 then
                         current_zone[#current_zone] = nil
+                        if selected_point and selected_point > #current_zone then
+                            selected_point = nil
+                        end
                         send_polygon_nui_update()
                     end
 
