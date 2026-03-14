@@ -70,6 +70,97 @@ function Zones.GetDistanceSquared(pos1, pos2)
     return dx * dx + dy * dy + dz * dz
 end
 
+local function PointInTriangle(px, py, ax, ay, bx, by, cx, cy)
+    local d1 = (px - cx) * (ay - cy) - (ax - cx) * (py - cy)
+    local d2 = (px - ax) * (by - ay) - (bx - ax) * (py - ay)
+    local d3 = (px - bx) * (cy - by) - (cx - bx) * (py - by)
+    return not ((d1 < 0 or d2 < 0 or d3 < 0) and (d1 > 0 or d2 > 0 or d3 > 0))
+end
+
+local triangulationCache = {}
+
+local function TriangulatePolygon(points)
+    local keyParts = {}
+    for i, p in ipairs(points) do
+        keyParts[i] = string.format('%.2f,%.2f', p.x, p.y)
+    end
+    local cacheKey = table.concat(keyParts, '_')
+    if triangulationCache[cacheKey] then
+        return triangulationCache[cacheKey]
+    end
+
+    local n = #points
+    if n < 3 then return {} end
+
+    local indices = {}
+    for i = 1, n do indices[i] = i end
+
+    local area = 0
+    for i = 1, n do
+        local j = i % n + 1
+        area = area + (points[indices[i]].x * points[indices[j]].y - points[indices[j]].x * points[indices[i]].y)
+    end
+    if area > 0 then
+        local rev = {}
+        for i = n, 1, -1 do rev[n - i + 1] = indices[i] end
+        indices = rev
+    end
+
+    local triangles = {}
+    local remaining = n
+    local curr = 1
+    local attempts = 0
+
+    while remaining > 3 do
+        if attempts > remaining * 2 then break end
+
+        local prev = ((curr - 2) % remaining) + 1
+        local ci = ((curr - 1) % remaining) + 1
+        local next = (curr % remaining) + 1
+
+        local a = points[indices[prev]]
+        local b = points[indices[ci]]
+        local c = points[indices[next]]
+
+        local cross = (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x)
+
+        if cross < 0 then
+            local is_ear = true
+            for i = 1, remaining do
+                if i ~= prev and i ~= ci and i ~= next then
+                    if PointInTriangle(points[indices[i]].x, points[indices[i]].y, a.x, a.y, b.x, b.y, c.x, c.y) then
+                        is_ear = false
+                        break
+                    end
+                end
+            end
+
+            if is_ear then
+                triangles[#triangles + 1] = { indices[prev], indices[ci], indices[next] }
+                table.remove(indices, ci)
+                remaining = remaining - 1
+                attempts = 0
+                if ci > remaining then curr = 1 else curr = ci end
+            else
+                curr = curr + 1
+                attempts = attempts + 1
+            end
+        else
+            curr = curr + 1
+            attempts = attempts + 1
+        end
+
+        if curr > remaining then curr = 1 end
+    end
+
+    if remaining == 3 then
+        triangles[#triangles + 1] = { indices[1], indices[2], indices[3] }
+    end
+
+    triangulationCache[cacheKey] = triangles
+    return triangles
+end
+
 local function GetLowestPointInCircle(coords, radius)
     local cacheKey = string.format('circle_%.2f_%.2f_%.0f', coords.x, coords.y, radius)
     local cacheEntry = lowestPointCache[cacheKey]
@@ -1138,26 +1229,28 @@ local function DrawEnhancedPolygon(zone, markerData, currentTime)
     end
 
     if #adjustedPoints >= 3 then
-        local centerZ = baseMinZ
+        local tris = TriangulatePolygon(points)
 
-        for i = 1, #adjustedPoints do
-            local p1 = adjustedPoints[i]
-            local p2 = adjustedPoints[i % #adjustedPoints + 1]
+        for _, tri in ipairs(tris) do
+            local a = adjustedPoints[tri[1]]
+            local b = adjustedPoints[tri[2]]
+            local c = adjustedPoints[tri[3]]
 
-            DrawPoly(centerX, centerY, centerZ, p1.x, p1.y, p1.minZ, p2.x, p2.y, p2.minZ, groundColor.r, groundColor.g, groundColor.b, groundColor.a)
-            DrawPoly(centerX, centerY, centerZ, p2.x, p2.y, p2.minZ, p1.x, p1.y, p1.minZ, groundColor.r, groundColor.g, groundColor.b, math.floor(groundColor.a * 0.7))
+            DrawPoly(a.x, a.y, a.minZ, b.x, b.y, b.minZ, c.x, c.y, c.minZ, groundColor.r, groundColor.g, groundColor.b, groundColor.a)
+            DrawPoly(c.x, c.y, c.minZ, b.x, b.y, b.minZ, a.x, a.y, a.minZ, groundColor.r, groundColor.g, groundColor.b, math.floor(groundColor.a * 0.7))
         end
 
         if shouldDrawRoof and markerData.lod ~= 'low' then
             local ceilingZ = baseMaxZ
             local roofAlphaOuter = math.min(255, math.floor(groundColor.a * 1.5))
             local roofAlphaInner = math.min(255, math.floor(groundColor.a * 1.2))
-            for i = 1, #adjustedPoints do
-                local p1 = adjustedPoints[i]
-                local p2 = adjustedPoints[i % #adjustedPoints + 1]
+            for _, tri in ipairs(tris) do
+                local a = adjustedPoints[tri[1]]
+                local b = adjustedPoints[tri[2]]
+                local c = adjustedPoints[tri[3]]
 
-                DrawPoly(centerX, centerY, ceilingZ, p1.x, p1.y, ceilingZ, p2.x, p2.y, ceilingZ, groundColor.r, groundColor.g, groundColor.b, roofAlphaOuter)
-                DrawPoly(centerX, centerY, ceilingZ, p2.x, p2.y, ceilingZ, p1.x, p1.y, ceilingZ, groundColor.r, groundColor.g, groundColor.b, roofAlphaInner)
+                DrawPoly(a.x, a.y, ceilingZ, b.x, b.y, ceilingZ, c.x, c.y, ceilingZ, groundColor.r, groundColor.g, groundColor.b, roofAlphaOuter)
+                DrawPoly(c.x, c.y, ceilingZ, b.x, b.y, ceilingZ, a.x, a.y, ceilingZ, groundColor.r, groundColor.g, groundColor.b, roofAlphaInner)
             end
         end
     end
